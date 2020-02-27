@@ -1,0 +1,89 @@
+{
+  "updateTime": 1573118843251,
+  "name": "online_map_produce",
+  "description": "online_map_produce",
+  "version": 1,
+  "tasks": [
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_online_tracking",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 8
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "online_tracking",
+      "taskReferenceName": "online_tracking",
+      "description": "tracking",
+      "inputParameters": {
+        "task_id": "${workflow.input.task_id}",
+        "package_name": "${workflow.input.package_name}",
+        "device_box_id": "${workflow.input.device_box_id}",
+        "packageType": 3
+      },
+      "type": "SIMPLE",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_detection_partition",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 9
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "detection_partition",
+      "taskReferenceName": "detection_partition",
+      "description": "partition",
+      "inputParameters": {
+        "packageName": "${workflow.input.package_name}",
+        "packageType": 3
+      },
+      "type": "SIMPLE",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_online_map_produce_completed",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 4
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    }
+  ],
+  "failureWorkflow": "online_map_produce_failure_handle",
+  "schemaVersion": 2,
+  "restartable": true,
+  "workflowStatusListenerEnabled": false
+}

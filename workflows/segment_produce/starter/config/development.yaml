@@ -1,0 +1,5 @@
+# config for sample
+domain: "samples-domain"
+service: "cadence-frontend"
+#host: "127.0.0.1:7933"
+host: "172.20.0.16:7933"

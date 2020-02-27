@@ -1,0 +1,80 @@
+{
+  "workflow": {
+    "input": {
+      "skeletonCode": [
+        "w22532"
+      ],
+      "packageList": [
+        "CSMFSOC-H-EU300-V01-01-1901-0003_2019_07_07_07_20_20",
+        "CSMFSOC-H-EU300-V01-01-1901-0016_2019_07_08_10_20_24",
+        "CSMFSOC-H-EU300-V01-01-1901-0013_2019_06_13_16_41_03",
+        "CSMFSOC-H-EU300-V01-01-1901-0016_2019_06_11_12_00_41",
+        "CSMFSOC-H-EU300-V01-01-1901-0018_2019_06_14_21_43_55",
+        "CSMFSOC-H-EU300-V01-01-1901-0003_2019_06_11_23_32_53",
+        "CSMFSOC-H-EU300-V01-01-1901-0011_2019_06_10_22_55_32",
+        "CSMFSOC-H-EU300-V01-01-1901-0019_2019_06_20_12_27_00",
+        "CSMFSOC-H-EU300-V01-01-1901-0013_2019_06_20_14_29_59",
+        "CSMFSOC-H-EU300-V01-01-1901-0006_2019_06_13_08_04_41"
+      ],
+      "osmFileIDs": [
+        "w22532"
+      ],
+      "skeletonWayCodes": "w22532",
+      "segmentTaskID": 427,
+      "updateInfo": [
+        {
+          "checked_result": "1",
+          "creator": "crowdsourcing-offline",
+          "dup_key": "w22532.2019-10-16-03:25:16.140540946840384",
+          "new_sign": {
+            "category": 0,
+            "confidence": 0.9,
+            "points": [
+              {
+                "alt": 41.07011009193957,
+                "lat": 39.88567948793305,
+                "lon": 116.30452481014567
+              },
+              {
+                "alt": 41.09057032875717,
+                "lat": 39.88568098426344,
+                "lon": 116.30453493646907
+              },
+              {
+                "alt": 40.07829110883176,
+                "lat": 39.885679494789876,
+                "lon": 116.30452465844613
+              },
+              {
+                "alt": 40.08962273132056,
+                "lat": 39.88568111403135,
+                "lon": 116.30453488398953
+              }
+            ]
+          },
+          "obj_type": "traffic_sign",
+          "package_id": [
+            "CSMFSOC-H-EU300-V01-01-1901-0003_2019_06_11_23_32_53_29",
+            "CSMFSOC-H-EU300-V01-01-1901-0003_2019_07_07_07_20_20_27",
+            "CSMFSOC-H-EU300-V01-01-1901-0006_2019_06_13_08_04_41_24",
+            "CSMFSOC-H-EU300-V01-01-1901-0011_2019_06_10_22_55_32_31",
+            "CSMFSOC-H-EU300-V01-01-1901-0013_2019_06_13_16_41_03_35",
+            "CSMFSOC-H-EU300-V01-01-1901-0013_2019_06_20_14_29_59_20",
+            "CSMFSOC-H-EU300-V01-01-1901-0016_2019_06_11_12_00_41_16",
+            "CSMFSOC-H-EU300-V01-01-1901-0018_2019_06_14_21_43_55_28"
+          ],
+          "shape": "rectangle",
+          "sub_update_type": "create",
+          "update_type": "create"
+        }
+      ],
+      "updateParamsURL": "http://staging-production-management.hdmap.momenta.works/api/v1/crowdsourcing/segment-task/427/params",
+      "updateStatusURL": "http://staging-production-management.hdmap.momenta.works/api/v1/crowdsourcing/segment-task/427/status",
+      "buzTaskID": "427",
+      "buzTaskName": "427",
+      "fileMode": true
+    }
+  }
+}
+
+

@@ -1,0 +1,316 @@
+{
+  "updateTime": 1561348079177,
+  "name": "crowdsourcing_segment_produce",
+  "description": "众包路段生产",
+  "version": 1,
+  "tasks": [
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_get_skeleton",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 7
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "common_http",
+      "taskReferenceName": "get_skeleton",
+      "description": "获取骨架线信息",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://staging-skeleton-service.hdmap.momenta.works/v1/track/point?trunk_id=${workflow.input.skeletonWayCodes}",
+          "method": "GET"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_save_to_grid_store",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 8
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "save_to_grid_store",
+      "taskReferenceName": "save_to_grid_store",
+      "description": "保存任务信息",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://staging-grid-store.hdmap.momenta.works/task/cs-${workflow.input.segmentTaskID}",
+          "method": "POST",
+          "body": {
+            "task_id": "${workflow.input.segmentTaskID}",
+            "package_list": "${workflow.input.packageList}",
+            "skeleton_type": "${get_skeleton.output.response.body.data[0].type}",
+            "geom": "${get_skeleton.output.response.body.data[0].result..geom}",
+            "extended_geom": "${get_skeleton.output.response.body.data[0].result..extended_geom}",
+            "way_name": "${get_skeleton.output.response.body.data[0].result..way_name}",
+            "way_type": "${get_skeleton.output.response.body.data[0].result..way_type}",
+            "file_mode": true,
+            "package_type": 1
+          },
+          "contentType": "application/json"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_save_update_info",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 9
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "common_http",
+      "taskReferenceName": "save_update_info",
+      "description": "保存更新情报",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://staging-grid-store.hdmap.momenta.works/checklist/batch/cs-${workflow.input.segmentTaskID}/update_manu_confirm",
+          "method": "POST",
+          "body": "${workflow.input.updateInfo}",
+          "contentType": "application/json"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_update_create_base_map",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 10
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_create_base_map",
+      "taskReferenceName": "update_create_base_map",
+      "description": "创建作业底图",
+      "inputParameters": {
+        "buz_task_id": "cs-${workflow.input.segmentTaskID}",
+        "osm_file_ids": "${workflow.input.osmFileIDs}",
+        "package_type": 1
+      },
+      "type": "SIMPLE",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_update_manu_confirm",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 11
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_manu_confirm",
+      "taskReferenceName": "update_manu_confirm",
+      "description": "人工确认更新",
+      "inputParameters": {
+        "buz_task_id": "cs-${workflow.input.buzTaskID}",
+        "task_id": "${workflow.input.segmentTaskID}",
+        "packageName": "cs-${workflow.input.buzTaskID}",
+        "buz_task_name": "${workflow.input.buzTaskName}",
+        "tags": "no_name",
+        "points_ext": "${get_skeleton.output.response.body.data[0].result[0].extended_geom}",
+        "points": "${get_skeleton.output.response.body.data[0].result[0].geom}",
+        "file_mode": "${workflow.input.fileMode}",
+        "other_attr": {
+          "seq_num": "${workflow.input.segmentTaskID}"
+        },
+        "package_type": 1
+      },
+      "type": "SIMPLE",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_update_get_confirm_result",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 12
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "common_http",
+      "taskReferenceName": "update_get_confirm_result",
+      "description": "获取确认结果",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://staging-grid-store.hdmap.momenta.works/checklist/confirm_check_result_anyok/cs-${workflow.input.segmentTaskID}/update_manu_confirm",
+          "method": "GET"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_save_confirm_result",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 13
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "common_http",
+      "taskReferenceName": "save_confirm_result",
+      "description": "保存确认结果",
+      "inputParameters": {
+        "http_request": {
+          "uri": "${workflow.input.updateParamsURL}",
+          "method": "PUT",
+          "body": {
+            "params": {
+              "confirm_result": ":${update_get_confirm_result.output.response.body.confirm_result}"
+            }
+          },
+          "contentType": "application/json"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_confirmed_decision",
+      "taskReferenceName": "update_confirmed_decision",
+      "inputParameters": {
+        "confirmed": ":${update_get_confirm_result.output.response.body.confirm_result}"
+      },
+      "type": "DECISION",
+      "caseValueParam": "confirmed",
+      "decisionCases": {
+        ":true": [
+          {
+            "name": "update_status",
+            "taskReferenceName": "update_status_update_muku",
+            "inputParameters": {
+              "http_request": {
+                "body": {
+                  "status": 14
+                },
+                "contentType": "application/json",
+                "method": "PUT",
+                "uri": "${workflow.input.updateStatusURL}"
+              }
+            },
+            "type": "HTTP",
+            "startDelay": 0,
+            "optional": false
+          },
+          {
+            "name": "update_muku",
+            "taskReferenceName": "update_muku",
+            "description": "更新母库",
+            "inputParameters": {
+              "buz_task_id": "cs-${workflow.input.segmentTaskID}"
+            },
+            "type": "SIMPLE",
+            "startDelay": 0,
+            "optional": false
+          }
+        ]
+      },
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_crowdsourcing_segment_produce_completed",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 4
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    }
+  ],
+  "failureWorkflow": "crowdsourcing_segment_produce_failure_handle",
+  "schemaVersion": 2,
+  "restartable": true,
+  "workflowStatusListenerEnabled": false
+}

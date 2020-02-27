@@ -1,0 +1,93 @@
+{
+  "updateTime": 1571379968882,
+  "name": "map_produce_no_detection",
+  "description": "hdmap producing",
+  "version": 1,
+  "tasks": [
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_calib",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://dev-production-management.hdmap.momenta.works/api/v1/package-tasks/${workflow.input.packageName}/status",
+          "method": "PUT",
+          "body": {
+            "package_name": "${workflow.input.packageName}",
+            "status": 5,
+            "workorder_name": "${workflow.input.workorder}"
+          },
+          "contentType": "application/json"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "self_calib",
+      "taskReferenceName": "self_calib",
+      "inputParameters": {
+        "packageName": "${workflow.input.packageName}",
+        "packageType": "${workflow.input.package_type}",
+        "work_order": "${workflow.input.workorder}"
+      },
+      "type": "SIMPLE",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_detection_partition",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://dev-production-management.hdmap.momenta.works/api/v1/package-tasks/${workflow.input.packageName}/status",
+          "method": "PUT",
+          "body": {
+            "package_name": "${workflow.input.packageName}",
+            "status": 8,
+            "workorder_name": "${workflow.input.workorder}"
+          },
+          "contentType": "application/json"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "detection_partition",
+      "taskReferenceName": "detection_partition",
+      "inputParameters": {
+        "packageName": "${workflow.input.packageName}",
+        "packageType": "${workflow.input.package_type}",
+        "work_order": "${workflow.input.workorder}"
+      },
+      "type": "SIMPLE",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_done",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://dev-production-management.hdmap.momenta.works/api/v1/package-tasks/${workflow.input.packageName}/status",
+          "method": "PUT",
+          "body": {
+            "package_name": "${workflow.input.packageName}",
+            "status": 7,
+            "workorder_name": "${workflow.input.workorder}"
+          },
+          "contentType": "application/json"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    }
+  ],
+  "failureWorkflow": "map_produce_failure_handle",
+  "schemaVersion": 2,
+  "restartable": true,
+  "workflowStatusListenerEnabled": false
+}

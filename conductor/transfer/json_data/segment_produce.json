@@ -1,0 +1,583 @@
+{
+  "updateTime": 1575525484681,
+  "name": "segment_produce",
+  "version": 1,
+  "tasks": [
+    {
+      "name": "get_skeleton",
+      "taskReferenceName": "get_skeleton",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://dev-skeleton-service.hdmap.momenta.works/v1/track/point?type=${workflow.input.domain}&trunk_id=${workflow.input.skeleton_way_codes}",
+          "method": "GET"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "save_to_grid_store",
+      "taskReferenceName": "save_to_grid_store",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://dev-grid-store.hdmap.momenta.works/task/${workflow.input.id}",
+          "method": "POST",
+          "body": {
+            "task_id": "${workflow.input.id}",
+            "package_type": "${workflow.input.package_type}",
+            "package_list": "${workflow.input.package_list}",
+            "file_mode": "${workflow.input.file_mode}",
+            "skeleton_type": "${get_skeleton.output.response.body.data[0].type}",
+            "geom": "${get_skeleton.output.response.body.data[0].result..geom}",
+            "extended_geom": "${get_skeleton.output.response.body.data[0].result..extended_geom}",
+            "way_name": "${get_skeleton.output.response.body.data[0].result..way_name}",
+            "way_type": "${get_skeleton.output.response.body.data[0].result..way_type}",
+            "collection_start": "${workflow.input.collection_start}",
+            "collection_end": "${workflow.input.collection_end}"
+          },
+          "contentType": "application/json"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_iw_mapping",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 8
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "iw_mapping",
+      "taskReferenceName": "iw_mapping",
+      "description": "联合建图",
+      "inputParameters": {
+        "task_id": "${workflow.input.id}",
+        "package_type": "${workflow.input.package_type}",
+        "file_mode": "${workflow.input.file_mode}",
+        "skeleton_type": "${get_skeleton.output.response.body.data[0].type}",
+        "geom": "${get_skeleton.output.response.body.data[0].result..geom}",
+        "extended_geom": "${get_skeleton.output.response.body.data[0].result..extended_geom}",
+        "package_list": "${workflow.input.package_list}",
+        "skeleton_package_map": "${workflow.input.skeleton_package_map}",
+        "domain": "${workflow.input.domain}",
+        "way_type": "${get_skeleton.output.response.body.data[0].result..way_type}"
+      },
+      "type": "SIMPLE",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "need_check_decision",
+      "taskReferenceName": "coverages_ok_decision",
+      "inputParameters": {
+        "coverages_ok": "${iw_mapping.output.coverages_ok}"
+      },
+      "type": "DECISION",
+      "caseValueParam": "coverages_ok",
+      "decisionCases": {
+        "NO": [
+          {
+            "name": "update_status",
+            "taskReferenceName": "update_status_wait_manu_check_coverages",
+            "inputParameters": {
+              "http_request": {
+                "body": {
+                  "status": 9
+                },
+                "contentType": "application/json",
+                "method": "PUT",
+                "uri": "${workflow.input.updateStatusURL}"
+              }
+            },
+            "type": "HTTP",
+            "startDelay": 0,
+            "optional": false
+          },
+          {
+            "name": "wait_complete",
+            "taskReferenceName": "wait_manu_check_coverages",
+            "description": "人工检查覆盖率",
+            "type": "WAIT",
+            "startDelay": 0,
+            "optional": false
+          }
+        ]
+      },
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_iw_pose_write_back",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 10
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "iw_pose_write_back",
+      "taskReferenceName": "iw_pose_write_back",
+      "description": "姿态回写",
+      "inputParameters": {
+        "id": "${workflow.input.id}"
+      },
+      "type": "SIMPLE",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_iw_mesh",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 11
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "iw_mesh",
+      "taskReferenceName": "iw_mesh",
+      "description": "生成mesh点云",
+      "inputParameters": {
+        "task_id": "${workflow.input.id}",
+        "package_type": "${workflow.input.package_type}",
+        "skeleton_type": "${get_skeleton.output.response.body.data[0].type}"
+      },
+      "type": "SIMPLE",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_iw_mearth_3dtile_compiler",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 12
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "iw_mearth_3dtile_compiler",
+      "taskReferenceName": "iw_mearth_3dtile_compiler",
+      "description": "编译3D瓦片",
+      "inputParameters": {
+        "task_id": "${workflow.input.id}",
+        "file_names": "${iw_mesh.output.file_names}"
+      },
+      "type": "SIMPLE",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_iw_fm_auto_yantu",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 13
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "iw_fm_auto_yantu",
+      "taskReferenceName": "iw_fm_auto_yantu",
+      "description": "验图",
+      "inputParameters": {
+        "task_id": "${workflow.input.id}",
+        "package_type": "${workflow.input.package_type}",
+        "file_mode": "${workflow.input.file_mode}",
+        "skeleton_type": "${get_skeleton.output.response.body.data[0].type}",
+        "geom": "${get_skeleton.output.response.body.data[0].result..geom}",
+        "extended_geom": "${get_skeleton.output.response.body.data[0].result..extended_geom}",
+        "package_list": "${workflow.input.package_list}",
+        "skeleton_package_map": "${workflow.input.skeleton_package_map}",
+        "domain": "${workflow.input.domain}",
+        "way_type": "${get_skeleton.output.response.body.data[0].result..way_type}"
+      },
+      "type": "SIMPLE",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_iw_auto_clue_process",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 14
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "iw_auto_clue_process",
+      "taskReferenceName": "iw_auto_clue_process",
+      "description": "情报处理",
+      "inputParameters": {
+        "task_id": "${workflow.input.buz_task_id}"
+      },
+      "type": "SIMPLE",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_iw_fm_manu_delete_line",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 15
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "iw_fm_manu_delete_line",
+      "taskReferenceName": "iw_fm_manu_delete_line",
+      "description": "人工删线",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://dev-production-management.hdmap.momenta.works/api/v1/human-task/add-task",
+          "method": "POST",
+          "body": {
+            "task_type": "iw_fm_manu_delete_line",
+            "task_sub_id": "${workflow.input.id}",
+            "grid_id": "${workflow.input.buz_task_id}",
+            "process_type": 1,
+            "task_seq_num": "${workflow.input.id}",
+            "task_valid_status": 0,
+            "priority": 0,
+            "task_status": 0,
+            "task_content": {}
+          },
+          "asyncComplete": true,
+          "contentType": "application/json"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "wait_complete",
+      "taskReferenceName": "wait_iw_fm_manu_delete_line",
+      "type": "WAIT",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_iw_fm_auto_topology",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 16
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "iw_fm_auto_topology",
+      "taskReferenceName": "iw_fm_auto_topology",
+      "description": "自动拓扑",
+      "inputParameters": {
+        "buz_task_id": "${workflow.input.buz_task_id}",
+        "task_id": "${workflow.input.id}",
+        "package_type": "${workflow.input.package_type}",
+        "packageName": "${workflow.input.buz_task_id}",
+        "buz_task_name": "${workflow.input.buz_task_name}",
+        "tags": "no_name",
+        "points_ext": "${get_skeleton.output.response.body.data[0].result[0].extended_geom}",
+        "points": "${get_skeleton.output.response.body.data[0].result[0].geom}",
+        "file_mode": "${workflow.input.file_mode}",
+        "other_attr": {
+          "seq_num": "${workflow.input.id}"
+        },
+        "geom": "${get_skeleton.output.response.body.data[0].result..geom}",
+        "extended_geom": "${get_skeleton.output.response.body.data[0].result..extended_geom}"
+      },
+      "type": "SIMPLE",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_iw_fm_manu_lane",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 17
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "iw_fm_manu_lane",
+      "taskReferenceName": "iw_fm_manu_lane",
+      "description": "人工车道线生产",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://dev-production-management.hdmap.momenta.works/api/v1/human-task/add-task",
+          "method": "POST",
+          "body": {
+            "task_type": "iw_fm_manu_lane",
+            "task_sub_id": "${workflow.input.id}",
+            "grid_id": "${workflow.input.buz_task_id}",
+            "process_type": 1,
+            "task_seq_num": "${workflow.input.id}",
+            "task_valid_status": 0,
+            "priority": 0,
+            "task_status": 0,
+            "task_content": {}
+          },
+          "asyncComplete": true,
+          "contentType": "application/json"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "wait_complete",
+      "taskReferenceName": "wait_iw_fm_manu_lane",
+      "type": "WAIT",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "iw_delete_by_roadcenter",
+      "taskReferenceName": "iw_delete_by_roadcenter",
+      "inputParameters": {
+        "id": "${workflow.input.id}"
+      },
+      "type": "SIMPLE",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "iw_pole_auto_check_dup",
+      "taskReferenceName": "iw_pole_auto_check_dup",
+      "inputParameters": {
+        "buz_task_id": "${workflow.input.buz_task_id}",
+        "task_id": "${workflow.input.id}",
+        "package_type": "${workflow.input.package_type}",
+        "task_polygon": "${workflow.input.task_polygon}",
+        "points": "${get_skeleton.output.response.body.data[0].result[0].geom}",
+        "file_mode": "${workflow.input.file_mode}",
+        "points_ext": "${get_skeleton.output.response.body.data[0].result[0].extended_geom}"
+      },
+      "type": "SIMPLE",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "need_check_decision",
+      "taskReferenceName": "need_check_decision",
+      "inputParameters": {
+        "status": "${iw_pole_auto_check_dup.output.status}"
+      },
+      "type": "DECISION",
+      "caseValueParam": "status",
+      "decisionCases": {
+        "YES": [
+          {
+            "name": "update_status",
+            "taskReferenceName": "update_status_iw_pole_manu_check_dup",
+            "inputParameters": {
+              "http_request": {
+                "body": {
+                  "status": 18
+                },
+                "contentType": "application/json",
+                "method": "PUT",
+                "uri": "${workflow.input.updateStatusURL}"
+              }
+            },
+            "type": "HTTP",
+            "startDelay": 0,
+            "optional": false
+          },
+          {
+            "name": "iw_pole_manu_check_dup",
+            "taskReferenceName": "iw_pole_manu_check_dup",
+            "description": "人工牌杆去重",
+            "inputParameters": {
+              "http_request": {
+                "uri": "http://dev-production-management.hdmap.momenta.works/api/v1/human-task/add-task",
+                "method": "POST",
+                "body": {
+                  "task_type": "iw_pole_manu_check_dup",
+                  "task_sub_id": "${workflow.input.id}",
+                  "grid_id": "${workflow.input.buz_task_id}",
+                  "process_type": 1,
+                  "task_seq_num": "${workflow.input.id}",
+                  "task_valid_status": 0,
+                  "priority": 0,
+                  "task_status": 0,
+                  "task_content": {}
+                },
+                "asyncComplete": true,
+                "contentType": "application/json"
+              }
+            },
+            "type": "HTTP",
+            "startDelay": 0,
+            "optional": false
+          },
+          {
+            "name": "wait_complete",
+            "taskReferenceName": "wait_iw_pole_manu_check_dup",
+            "type": "WAIT",
+            "startDelay": 0,
+            "optional": false
+          }
+        ]
+      },
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_iw_manu_increment_merge",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 19
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "iw_manu_increment_merge",
+      "taskReferenceName": "iw_manu_increment_merge",
+      "description": "人工合并",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://dev-production-management.hdmap.momenta.works/api/v1/human-task/add-task",
+          "method": "POST",
+          "body": {
+            "task_type": "iw_manu_increment_merge",
+            "task_sub_id": "${workflow.input.id}",
+            "grid_id": "${workflow.input.buz_task_id}",
+            "process_type": 1,
+            "task_seq_num": "${workflow.input.id}",
+            "task_valid_status": 0,
+            "priority": 0,
+            "task_status": 0,
+            "task_content": {}
+          },
+          "asyncComplete": true,
+          "contentType": "application/json"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "wait_complete",
+      "taskReferenceName": "wait_iw_manu_increment_merge",
+      "type": "WAIT",
+      "startDelay": 0,
+      "optional": false
+    },
+    {
+      "name": "update_status",
+      "taskReferenceName": "update_status_segment_produce_completed",
+      "inputParameters": {
+        "http_request": {
+          "body": {
+            "status": 4
+          },
+          "contentType": "application/json",
+          "method": "PUT",
+          "uri": "${workflow.input.updateStatusURL}"
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    }
+  ],
+  "failureWorkflow": "segment_produce_failure_handle",
+  "schemaVersion": 2,
+  "restartable": true,
+  "workflowStatusListenerEnabled": false
+}
